@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.my-map {
+    width: 200px;
+    height: 200px;
+}
