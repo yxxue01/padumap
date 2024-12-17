@@ -56,12 +56,15 @@ export default function MapPage() {
       if (!placeAutocomplete) return;
       placeAutocomplete.addListener("place_changed", () => {
         onPlaceSelect(placeAutocomplete.getPlace());
-        console.log('place auto complete',placeAutocomplete.getPlace())
         const place = placeAutocomplete.getPlace();
-        setLang(place?.geometry?.location?.lng() || 0);
-        setLat(place?.geometry?.location?.lat() || 0);
-        setPinPlace(place?.formatted_address);
-        setInputValue("");
+        const lat = place?.geometry?.location?.lat()
+        const lng = place?.geometry?.location?.lng()
+        const address = place?.formatted_address
+        const address_latlng = `${address} (${lng},${lat})`
+        setLang(lng || 0);
+        setLat(lat || 0);
+        setPinPlace(address);
+        // setInputValue("address_latlng");
       });
     }, [onPlaceSelect, placeAutocomplete]);
 
@@ -106,15 +109,12 @@ export default function MapPage() {
       const latlng = { lat: e.latLng.lat(), lng: e.latLng.lng() };
       const geocoder = new google.maps.Geocoder();
       geocoder.geocode({ location: latlng }).then((response) => {
-        console.log(response.results[0])
-        console.log('current zoom', map?.getZoom())
         const currentZoom = map?.getZoom()
         setZoom(currentZoom)
-        // console.log('updated zoom', map?.getZoom())
-        setPinPlace(response.results[0].formatted_address);
+        setPinPlace(`${response.results[0].formatted_address} (${response.results[0].geometry.location.lng()}, ${response.results[0].geometry.location.lat()})`);
         setLang(latlng.lng);
         setLat(latlng.lat);
-        // setSelectedPlace(response.results[0])
+        setSelectedPlace(response.results[0])
       });
     };
 
@@ -135,8 +135,6 @@ export default function MapPage() {
     useEffect(() => {
         console.log('zoom after render', map?.getZoom())
         console.log('zoom after render', map?.getZoom())
-        // console.log(zoom)
-        // console.log('render detected')
       if (navigator.geolocation && firstFetch) {
         navigator.geolocation.getCurrentPosition(   
           (position) => {
@@ -160,18 +158,12 @@ export default function MapPage() {
   };
 
   const Gmap = () => {
-    
-    const handleZoom = (e:MapCameraChangedEvent)=>{
-      setZoom(e.detail.zoom)
-    }
 
     return(
     <>
       <Map
         mapId={"padu2025"}
         defaultZoom={zoom}
-        zoom={zoom}
-        onZoomChanged={handleZoom}
         defaultCenter={{ lat: vlat, lng: vlang }}
         style={{ height: "100vh", width: "100%" }}
         mapTypeId={'terrain'}
