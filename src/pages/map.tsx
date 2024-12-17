@@ -8,12 +8,13 @@ import {
   useAdvancedMarkerRef,
   useMap,
   useMapsLibrary,
+  MapCameraChangedEvent,
 } from "@vis.gl/react-google-maps";
 
 export default function MapPage() {
     const [vlat, setLat] = useState(3.1474156118453926);
     const [vlang, setLang] = useState(101.6945375006577);
-    const [zoom, setZoom] = useState(16);
+    const [zoom, setZoom] = useState<number | undefined>(16);
     const [selectedPlace, setSelectedPlace] =
     useState<google.maps.places.PlaceResult | null>(null);
     let [firstFetch, setFirstFetch] = useState(true);
@@ -55,6 +56,7 @@ export default function MapPage() {
       if (!placeAutocomplete) return;
       placeAutocomplete.addListener("place_changed", () => {
         onPlaceSelect(placeAutocomplete.getPlace());
+        console.log('place auto complete',placeAutocomplete.getPlace())
         const place = placeAutocomplete.getPlace();
         setLang(place?.geometry?.location?.lng() || 0);
         setLat(place?.geometry?.location?.lat() || 0);
@@ -106,12 +108,13 @@ export default function MapPage() {
       geocoder.geocode({ location: latlng }).then((response) => {
         console.log(response.results[0])
         console.log('current zoom', map?.getZoom())
-        // const currentZoom = map?.getZoom()
-        // map?.setZoom(currentZoom)
-        console.log('updated zoom', map?.getZoom())
+        const currentZoom = map?.getZoom()
+        setZoom(currentZoom)
+        // console.log('updated zoom', map?.getZoom())
         setPinPlace(response.results[0].formatted_address);
         setLang(latlng.lng);
         setLat(latlng.lat);
+        // setSelectedPlace(response.results[0])
       });
     };
 
@@ -132,6 +135,7 @@ export default function MapPage() {
     useEffect(() => {
         console.log('zoom after render', map?.getZoom())
         console.log('zoom after render', map?.getZoom())
+        // console.log(zoom)
         // console.log('render detected')
       if (navigator.geolocation && firstFetch) {
         navigator.geolocation.getCurrentPosition(   
@@ -155,11 +159,19 @@ export default function MapPage() {
     return <></>;
   };
 
-  const Gmap = () => (
+  const Gmap = () => {
+    
+    const handleZoom = (e:MapCameraChangedEvent)=>{
+      setZoom(e.detail.zoom)
+    }
+
+    return(
     <>
       <Map
         mapId={"padu2025"}
-        defaultZoom={16}
+        defaultZoom={zoom}
+        zoom={zoom}
+        onZoomChanged={handleZoom}
         defaultCenter={{ lat: vlat, lng: vlang }}
         style={{ height: "100vh", width: "100%" }}
         mapTypeId={'terrain'}
@@ -172,7 +184,8 @@ export default function MapPage() {
       <MapHandler place={selectedPlace} />
       <MyComponent />
     </>
-  );
+    )
+  }
 
   const SelectedPlace = memo(() => {
     return (
@@ -205,7 +218,7 @@ export default function MapPage() {
             />
           </div>
           <div className="h-[80vh] pt-4 w-full">
-            <Gmap />
+            <Gmap/>
           </div>
         </div>
       </section>
